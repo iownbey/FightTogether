@@ -1,18 +1,18 @@
 ﻿using Hkmp.Api.Server;
 using HkmpPouch;
+using ESoulLink.Events;
 using System;
 using System.Collections.Generic;
-using System.Globalization;
 
-namespace SharedHealthManager
+namespace ESoulLink
 {
     internal class Server : ServerAddon
     {
         public override bool NeedsNetwork => false;
 
-        protected override string Name => "SharedHealthManager";
+        protected override string Name => Constants.AddonName;
 
-        protected override string Version => "0.0.1";
+        protected override string Version => Constants.AddonVersion;
 
         private PipeServer pipe;
         private IServerApi myServerApi;
@@ -21,13 +21,30 @@ namespace SharedHealthManager
         private Dictionary<int, List<string>> PlayerToEnemyPools = new();
         private Dictionary<string, int> PlayerContributionToPool = new();
 
+            private char[] separator = new char[] { '|' };
+
+        private string[] SplitData(PipeEvent e)
+        {
+            return e.EventData.Split(separator);
+        }
+
         public override void Initialize(IServerApi serverApi)
         {
             pipe = new PipeServer(this.Name);
             myServerApi = serverApi;
             pipe.ServerApi.ServerManager.PlayerConnectEvent += ServerManager_PlayerConnectEvent;
             pipe.ServerApi.ServerManager.PlayerDisconnectEvent += ServerManager_PlayerDisconnectEvent;
-            pipe.OnRecieve += Pipe_OnRecieve;
+
+            pipe.On(JoinPoolEventFactory.Instance).Do<JoinPoolEvent>((pipeEvent) =>{
+                Logger.Info("JoinPool Event has been made to work!");
+                JoinPool(pipeEvent.FromPlayer, pipeEvent.BossName, pipeEvent.WithHealth);
+            });
+            pipe.On(ModifyPoolHealthEventFactory.Instance).Do<ModifyPoolHealthEvent>((pipeEvent) => {
+                ModifyPool(pipeEvent.BossName,pipeEvent.ReduceHealthBy);
+            });
+            pipe.On(LeavePoolEventFactory.Instance).Do<LeavePoolEvent>((pipeEvent) => {
+                LeavePool(pipeEvent.FromPlayer, pipeEvent.EventData);
+            });
         }
         private void LeaveAllPools(int playerId) {
             if (PlayerToEnemyPools.TryGetValue(playerId, out var value2))
@@ -41,7 +58,7 @@ namespace SharedHealthManager
                         {
                             SceneEnemyHealthPool[v] = 0;
                         }
-                        pipe.Broadcast("UpdatedPool", $"{v}|{SceneEnemyHealthPool[v]}");
+                        pipe.Broadcast( new PoolUpdateEvent {BossName = v, CurrentHealth = SceneEnemyHealthPool[v]});
                     }
                     catch (Exception e)
                     {
@@ -62,7 +79,7 @@ namespace SharedHealthManager
                 {
                     SceneEnemyHealthPool[PoolName] = 0;
                 }
-                pipe.Broadcast("UpdatedPool", $"{PoolName}|{SceneEnemyHealthPool[PoolName]}");
+                pipe.Broadcast(new PoolUpdateEvent { BossName = PoolName, CurrentHealth = SceneEnemyHealthPool[PoolName] });
             }
             catch (Exception e)
             {
@@ -94,7 +111,7 @@ namespace SharedHealthManager
             {
                 SceneEnemyHealthPool[enemyName] = 0;
             }
-            pipe.Broadcast("UpdatedPool", $"{enemyName}|{SceneEnemyHealthPool[enemyName]}");
+            pipe.Broadcast(new PoolUpdateEvent { BossName = enemyName, CurrentHealth = SceneEnemyHealthPool[enemyName] });
         }
 
         private void ModifyPool(string enemyName,int damage)
@@ -110,7 +127,7 @@ namespace SharedHealthManager
             {
                 SceneEnemyHealthPool[enemyName] = 0;
             }
-            pipe.Broadcast("UpdatedPool", $"{enemyName}|{SceneEnemyHealthPool[enemyName]}");
+            pipe.Broadcast(new PoolUpdateEvent { BossName = enemyName, CurrentHealth = SceneEnemyHealthPool[enemyName] });
         }
 
         private void ServerManager_PlayerDisconnectEvent(IServerPlayer player)
@@ -118,23 +135,7 @@ namespace SharedHealthManager
             LeaveAllPools(player.Id);
         }
 
-        private void Pipe_OnRecieve(object sender, ReceivedEventArgs e)
-        {
-            var Data = e.Data;
-            var Split = Data.EventData.Split(new char[] { '|' });
-            if (Data.EventName == "JoinPool") 
-            {
-                JoinPool(Data.FromPlayer, Split[0], int.Parse(Split[1], CultureInfo.InvariantCulture));
-            } else if (Data.EventName == "ModifyPool") {
-                ModifyPool(Split[0], int.Parse(Split[1], CultureInfo.InvariantCulture));
-            }
-            else if (Data.EventName == "LeavePool")
-            {
-                LeavePool(Data.FromPlayer,Data.EventData);
-            }
-
-        }
-
+        
         private void ServerManager_PlayerConnectEvent(IServerPlayer obj)
         {
             myServerApi.ServerManager.BroadcastMessage($"Player {obj.Username} Has joined with the shared enemy health pool");
