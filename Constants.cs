@@ -8,7 +8,7 @@ namespace ESoulLink
 {
     internal class Constants
     {
-        public const string AddonName = "SharedHealthManager";
+        public const string AddonName = "ESoulLink";
         public const string AddonVersion = "0.1.0";
         public const string ModVersion = "0.1.0";
     }

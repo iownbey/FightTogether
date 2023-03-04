@@ -73,7 +73,6 @@ namespace ESoulLink
             }
             ESoulLink.pipeClient.ClientApi.ClientManager.ConnectEvent += ClientManager_ConnectEvent; ;
             ESoulLink.pipeClient.ClientApi.ClientManager.DisconnectEvent += ClientManager_DisconnectEvent;
-            On.HealthManager.TakeDamage += HealthManager_TakeDamage;
             JoinPool();
             if(hm.hp > 90)
             {
@@ -148,30 +147,8 @@ namespace ESoulLink
         void OnDestroy()
         {
             LeavePool();
-            On.HealthManager.TakeDamage -= HealthManager_TakeDamage;
             ESoulLink.pipeClient.ClientApi.ClientManager.ConnectEvent -= ClientManager_ConnectEvent; ;
             ESoulLink.pipeClient.ClientApi.ClientManager.DisconnectEvent -= ClientManager_DisconnectEvent;
-        }
-
-        private void HealthManager_TakeDamage(On.HealthManager.orig_TakeDamage orig, HealthManager self, HitInstance hitInstance)
-        {
-            if (self == null || gameObject == null)
-            {
-                return;
-            }
-            if (self.gameObject == null)
-            {
-                return;
-            }
-            if (!isActiveAndEnabled || !gameObject.activeInHierarchy || self.gameObject != gameObject)
-            {
-                orig(self, hitInstance);
-                return;
-            }
-            JoinPool();
-            var oldHp = hm.hp;
-            orig(self, hitInstance);
-            UpdatePool((oldHp - hm.hp));
         }
 
         void FixedUpdate()
@@ -179,7 +156,8 @@ namespace ESoulLink
             if (lastHp != hm.hp)
             {
                 var difference = lastHp - hm.hp;
-                Log($"Correcting hp for an unknown case, old: {lastHp} new: {hm.hp} difference: {difference}");
+                // now this is just the normal way of things
+                //Log($"Correcting hp for an unknown case, old: {lastHp} new: {hm.hp} difference: {difference}");
                 UpdatePool(difference);
                 lastHp = hm.hp;
             }
