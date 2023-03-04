@@ -11,7 +11,7 @@ namespace ESoulLink.Events
         public string BossName = "";
         public override string GetName()
         {
-            return JoinPoolEvent.Name;
+            return LeavePoolEvent.Name;
         }
 
         public override string ToString()
@@ -25,7 +25,7 @@ namespace ESoulLink.Events
         public static LeavePoolEventFactory Instance = new LeavePoolEventFactory();
         public string GetName()
         {
-            return JoinPoolEvent.Name;
+            return LeavePoolEvent.Name;
         }
 
         public PipeEvent FromSerializedString(string serializedData)

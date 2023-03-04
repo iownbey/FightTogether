@@ -63,10 +63,18 @@ namespace ESoulLink
             Name = gameObject.scene.name + gameObject.name;
             lastHp = hm.hp;
             originalHp = hm.hp;
+            if (hm.isDead)
+            {
+                return;
+            }
             ESoulLink.pipeClient.ClientApi.ClientManager.ConnectEvent += ClientManager_ConnectEvent; ;
             ESoulLink.pipeClient.ClientApi.ClientManager.DisconnectEvent += ClientManager_DisconnectEvent;
             On.HealthManager.TakeDamage += HealthManager_TakeDamage;
             JoinPool();
+            if(hm.hp > 90)
+            {
+                ESoulLink.pipeClient.ClientApi.UiManager.ChatBox.AddMessage($"An ill fated one Appears {gameObject.name}!");
+            }
         }
         private void Log(string str)
         {
@@ -118,6 +126,9 @@ namespace ESoulLink
                 if (hm != null)
                 {
                     ReflectionHelper.CallMethod<HealthManager>(hm, "TakeDamage", hI);
+                    if(originalHp > 90) { 
+                        ESoulLink.pipeClient.ClientApi.UiManager.ChatBox.AddMessage($"The waves were felt across the realms!");
+                    }
                 }
             }
         }

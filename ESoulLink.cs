@@ -67,7 +67,11 @@ namespace ESoulLink
 
         private void JoinPool(GameObject go)
         {
-            if (go.GetComponent<HealthManager>() == null) return;
+            var hm = go.GetComponent<HealthManager>();
+            if (hm == null || hm.isDead)
+            {
+                return;
+            }
             go.GetAddComponent<HpLinkBehaviour>();
         }
 
