@@ -34,7 +34,11 @@ namespace ESoulLink
             ESoulLink.pipeClient.SendToServer(new LeavePoolEvent { BossName = Name });
 
             // also remove any listeners
-            ESoulLink.pipeClient.OnRecieve -= PipeClient_OnRecieve;
+            //ESoulLink.pipeClient.OnRecieve -= PipeClient_OnRecieve;
+            if (OnPoolUpdateEvent != null && !OnPoolUpdateEvent.Destroyed)
+            {
+                OnPoolUpdateEvent.Destroy();
+            }
         }
         void JoinPool()
         {
