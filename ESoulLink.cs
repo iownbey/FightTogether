@@ -14,6 +14,7 @@ namespace ESoulLink
         internal static PipeClient pipeClient;
 
         internal static Dictionary<string, HealthManager> healthManagers = new Dictionary<string, HealthManager>();
+        internal static List<string> healthManagerNames = new List<string>();
 
         public override string GetVersion()
         {
@@ -52,6 +53,7 @@ namespace ESoulLink
 
         private void SceneManager_activeSceneChanged(UnityEngine.SceneManagement.Scene arg0, UnityEngine.SceneManagement.Scene arg1)
         {
+            healthManagerNames.Clear(); // new scene new me
             var gos = GameObjectUtils.GetAllGameObjectsInScene();
             foreach(var go in gos)
             {

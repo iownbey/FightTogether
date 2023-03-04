@@ -61,10 +61,30 @@ namespace ESoulLink
                 UpdateHealth(pipeEvent.CurrentHealth);
             });
         }
+        void FindName()
+        {
+            Name = gameObject.scene.name + gameObject.name;
+            if (!ESoulLink.healthManagerNames.Contains(Name)) { 
+
+                ESoulLink.healthManagerNames.Add(Name);
+                return;
+            }
+            for (var i=0; i < 100; i++)
+            {
+                Name = $"{gameObject.scene.name}{gameObject.name} ({i})";
+                if (!ESoulLink.healthManagerNames.Contains(Name))
+                {
+                    ESoulLink.healthManagerNames.Add(Name);
+                    return;
+                }
+
+            }
+            ESoulLink.Instance.Log($"Cannot find unique name for {Name} after 100 tries, bug game has bugs!");
+        }
         void Awake()
         {
             hm = GetComponent<HealthManager>();
-            Name = gameObject.scene.name + gameObject.name;
+            FindName();
             lastHp = hm.hp;
             originalHp = hm.hp;
             if (hm.isDead)
