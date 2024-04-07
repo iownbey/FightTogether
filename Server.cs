@@ -32,8 +32,8 @@ namespace ESoulLink
         {
             pipe = new PipeServer(this.Name);
             myServerApi = serverApi;
-            pipe.ServerApi.ServerManager.PlayerConnectEvent += ServerManager_PlayerConnectEvent;
-            pipe.ServerApi.ServerManager.PlayerDisconnectEvent += ServerManager_PlayerDisconnectEvent;
+            myServerApi.ServerManager.PlayerConnectEvent += ServerManager_PlayerConnectEvent;
+            myServerApi.ServerManager.PlayerDisconnectEvent += ServerManager_PlayerDisconnectEvent;
 
             pipe.On(JoinPoolEventFactory.Instance).Do<JoinPoolEvent>((pipeEvent) =>{
                 JoinPool(pipeEvent.FromPlayer, pipeEvent.BossName, pipeEvent.WithHealth);
