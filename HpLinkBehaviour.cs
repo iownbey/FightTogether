@@ -173,7 +173,7 @@ namespace ESoulLink
 
         void FixedUpdate()
         {
-            if (lastHp != hm.hp)
+            if (lastHp != hm.hp && lastHp > hm.hp)
             {
                 var difference = lastHp - hm.hp;
                 // now this is just the normal way of things
