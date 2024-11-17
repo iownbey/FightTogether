@@ -1,9 +1,10 @@
 ﻿using HkmpPouch;
 using System.Globalization;
 
-namespace ESoulLink.Events
+namespace FightTogether.Events
 {
-    public class ModifyPoolHealthEvent : PipeEvent {
+    public class ModifyPoolHealthEvent : PipeEvent
+    {
 
         internal static char[] separator = new char[] { '|' };
 

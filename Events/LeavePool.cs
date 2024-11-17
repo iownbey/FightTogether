@@ -1,6 +1,6 @@
 ﻿using HkmpPouch;
 
-namespace ESoulLink.Events
+namespace FightTogether.Events
 {
     public class LeavePoolEvent : PipeEvent
     {

@@ -1,10 +1,10 @@
 ﻿using Hkmp.Api.Server;
 using HkmpPouch;
-using ESoulLink.Events;
+using FightTogether.Events;
 using System;
 using System.Collections.Generic;
 
-namespace ESoulLink
+namespace FightTogether
 {
     internal class Server : ServerAddon
     {
@@ -17,11 +17,11 @@ namespace ESoulLink
         private PipeServer pipe;
         private IServerApi myServerApi;
 
-        private Dictionary<string, int> SceneEnemyHealthPool = new();
-        private Dictionary<int, List<string>> PlayerToEnemyPools = new();
-        private Dictionary<string, int> PlayerContributionToPool = new();
+        private readonly Dictionary<string, int> SceneEnemyHealthPool = [];
+        private readonly Dictionary<int, List<string>> PlayerToEnemyPools = [];
+        private readonly Dictionary<string, int> PlayerContributionToPool = [];
 
-            private char[] separator = new char[] { '|' };
+        private readonly char[] separator = ['|'];
 
         private string[] SplitData(PipeEvent e)
         {
@@ -35,22 +35,26 @@ namespace ESoulLink
             myServerApi.ServerManager.PlayerConnectEvent += ServerManager_PlayerConnectEvent;
             myServerApi.ServerManager.PlayerDisconnectEvent += ServerManager_PlayerDisconnectEvent;
 
-            pipe.On(JoinPoolEventFactory.Instance).Do<JoinPoolEvent>((pipeEvent) =>{
+            pipe.On(JoinPoolEventFactory.Instance).Do<JoinPoolEvent>((pipeEvent) =>
+            {
                 JoinPool(pipeEvent.FromPlayer, pipeEvent.BossName, pipeEvent.WithHealth);
             });
-            pipe.On(ModifyPoolHealthEventFactory.Instance).Do<ModifyPoolHealthEvent>((pipeEvent) => {
-                ModifyPool(pipeEvent.BossName,pipeEvent.ReduceHealthBy);
+            pipe.On(ModifyPoolHealthEventFactory.Instance).Do<ModifyPoolHealthEvent>((pipeEvent) =>
+            {
+                ModifyPool(pipeEvent.BossName, pipeEvent.ReduceHealthBy);
             });
-            pipe.On(LeavePoolEventFactory.Instance).Do<LeavePoolEvent>((pipeEvent) => {
+            pipe.On(LeavePoolEventFactory.Instance).Do<LeavePoolEvent>((pipeEvent) =>
+            {
                 LeavePool(pipeEvent.FromPlayer, pipeEvent.EventData);
             });
         }
-        private void LeaveAllPools(int playerId) {
+        private void LeaveAllPools(int playerId)
+        {
             if (PlayerToEnemyPools.TryGetValue(playerId, out var value2))
             {
                 foreach (var v in value2)
                 {
-                    if(PlayerContributionToPool.TryGetValue(v, out var poolContribution))
+                    if (PlayerContributionToPool.TryGetValue(v, out var poolContribution))
                     {
                         SceneEnemyHealthPool[v] -= poolContribution;
                         if (SceneEnemyHealthPool[v] <= 0)
@@ -81,7 +85,7 @@ namespace ESoulLink
             }
         }
 
-        private void JoinPool(int playerId,string enemyName,int hp)
+        private void JoinPool(int playerId, string enemyName, int hp)
         {
             if (!SceneEnemyHealthPool.TryGetValue(enemyName, out var value))
             {
@@ -91,7 +95,8 @@ namespace ESoulLink
             {
                 PlayerToEnemyPools[playerId] = new List<string>();
             }
-            if (!PlayerToEnemyPools[playerId].Contains(enemyName)) { 
+            if (!PlayerToEnemyPools[playerId].Contains(enemyName))
+            {
                 PlayerToEnemyPools[playerId].Add(enemyName);
             }
             PlayerContributionToPool[enemyName + playerId.ToString()] = hp;
@@ -103,7 +108,7 @@ namespace ESoulLink
             pipe.Broadcast(new PoolUpdateEvent { BossName = enemyName, CurrentHealth = SceneEnemyHealthPool[enemyName] });
         }
 
-        private void ModifyPool(string enemyName,int damage)
+        private void ModifyPool(string enemyName, int damage)
         {
 
             if (!SceneEnemyHealthPool.TryGetValue(enemyName, out var value))
@@ -111,7 +116,7 @@ namespace ESoulLink
                 SceneEnemyHealthPool[enemyName] = 0;
             }
             SceneEnemyHealthPool[enemyName] -= damage;
-            if(SceneEnemyHealthPool[enemyName] <= 0)
+            if (SceneEnemyHealthPool[enemyName] <= 0)
             {
                 SceneEnemyHealthPool[enemyName] = 0;
             }
@@ -123,7 +128,7 @@ namespace ESoulLink
             LeaveAllPools(player.Id);
         }
 
-        
+
         private void ServerManager_PlayerConnectEvent(IServerPlayer obj)
         {
             myServerApi.ServerManager.BroadcastMessage($"Another realm is brought into the tangle, {obj.Username} commits to the linking of fates");

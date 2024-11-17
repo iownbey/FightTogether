@@ -1,20 +1,20 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
 	<!-- Change this to the path of your modded HK installation -->
-	<HollowKnightRefs>E:\SteamLibrary\steamapps\common\Hollow Knight\hollow_knight_Data\Managed</HollowKnightRefs>
+	<HollowKnightRefs>C:\Program Files (x86)\Steam\steamapps\common\Hollow Knight\hollow_knight_Data\Managed</HollowKnightRefs>
 	<!-- Change this to the path where you want the ready-to-upload exports to be -->
-	<ExportDir>D:/__Exports/</ExportDir>
+	<ExportDir>.\dist</ExportDir>
 	<!-- Uncomment this to generate a documentation file to be included with the mod -->
 	<!--<DocumentationFile>$(OutputPath)/$(AssemblyTitle).xml</DocumentationFile>-->
   </PropertyGroup>
   <PropertyGroup>
-    <RootNamespace>ESoulLink</RootNamespace>
-    <AssemblyName>ESoulLink</AssemblyName>
+    <RootNamespace>FightTogether</RootNamespace>
+    <AssemblyName>FightTogether</AssemblyName>
     <TargetFramework>net472</TargetFramework>
-    <AssemblyTitle>ESoulLink</AssemblyTitle>
-    <Product>ESoulLink</Product>
+    <AssemblyTitle>FightTogether</AssemblyTitle>
+    <Product>FightTogether</Product>
     <Description>A Hollow Knight Mod</Description>
-    <Copyright>Copyright ©  2023</Copyright>
+    <Copyright>Copyright ©  2024</Copyright>
     <AssemblyVersion>1.0.0</AssemblyVersion>
     <FileVersion>1.0.0</FileVersion>
     <OutputPath>bin\$(Configuration)\</OutputPath>
@@ -328,9 +328,6 @@
 	  </Reference>
 	  <Reference Include="Hkmp">
 		  <HintPath>$(HollowKnightRefs)\Mods\Hkmp\Hkmp.dll</HintPath>
-	  </Reference>
-	  <Reference Include="HKMirror">
-		  <HintPath>$(HollowKnightRefs)/Mods/HKMirror/HKMirror.dll</HintPath>
 	  </Reference>
 	  <Reference Include="Satchel">
 		  <HintPath>$(HollowKnightRefs)/Mods/Satchel/Satchel.dll</HintPath>

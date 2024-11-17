@@ -1,7 +1,7 @@
 ﻿using HkmpPouch;
 using System.Globalization;
 
-namespace ESoulLink.Events
+namespace FightTogether.Events
 {
 
     public class JoinPoolEvent : PipeEvent
@@ -25,7 +25,7 @@ namespace ESoulLink.Events
         }
 
     }
-    public class JoinPoolEventFactory : IEventFactory 
+    public class JoinPoolEventFactory : IEventFactory
     {
         public static JoinPoolEventFactory Instance = new JoinPoolEventFactory();
         public string GetName()

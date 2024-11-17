@@ -5,20 +5,20 @@ using Satchel;
 using System.Collections.Generic;
 using UnityEngine;
 
-namespace ESoulLink
+namespace FightTogether
 {
-    public class ESoulLink : Mod
+    public class FightTogether : Mod
     {
-        internal static ESoulLink Instance;
+        internal static FightTogether Instance;
         internal static Server server;
         internal static PipeClient pipeClient;
 
         internal static Dictionary<string, HealthManager> healthManagers = new Dictionary<string, HealthManager>();
-        internal static List<string> healthManagerNames = new List<string>();
+        internal static List<string> healthManagerNames = [];
 
         public override string GetVersion()
         {
-            return Constants.AddonVersion; 
+            return Constants.AddonVersion;
         }
 
 
@@ -32,7 +32,8 @@ namespace ESoulLink
                 server = new Server();
                 ServerAddon.RegisterAddon(server);
             }
-            if (pipeClient == null) {
+            if (pipeClient == null)
+            {
                 pipeClient = new PipeClient(Constants.AddonName);
             }
             pipeClient.ServerCounterPartAvailable((isServerAddonPresent) =>
@@ -43,19 +44,20 @@ namespace ESoulLink
                     On.HealthManager.Start += HealthManager_Start;
                     UnityEngine.SceneManagement.SceneManager.activeSceneChanged += SceneManager_activeSceneChanged;
                 }
-                else {
+                else
+                {
                     pipeClient.ClientApi.UiManager.ChatBox.AddMessage("This realm forbids the linking of enemy souls");
                 }
             });
 
-            
+
         }
 
         private void SceneManager_activeSceneChanged(UnityEngine.SceneManagement.Scene arg0, UnityEngine.SceneManagement.Scene arg1)
         {
             healthManagerNames.Clear(); // new scene new me
             var gos = GameObjectUtils.GetAllGameObjectsInScene();
-            foreach(var go in gos)
+            foreach (var go in gos)
             {
                 JoinPool(go);
             }

@@ -1,9 +1,9 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
-VisualStudioVersion = 17.1.32407.343
+VisualStudioVersion = 17.5.002.0
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ESoulLink", "ESoulLink.csproj", "{06E5AEF7-02CF-46C8-BC0D-D5446F2245EA}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "FightTogether", "FightTogether.csproj", "{54F70009-AADC-46F6-A6FE-A6A07A84F6FB}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -11,15 +11,15 @@ Global
 		Release|Any CPU = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
-		{06E5AEF7-02CF-46C8-BC0D-D5446F2245EA}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{06E5AEF7-02CF-46C8-BC0D-D5446F2245EA}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{06E5AEF7-02CF-46C8-BC0D-D5446F2245EA}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{06E5AEF7-02CF-46C8-BC0D-D5446F2245EA}.Release|Any CPU.Build.0 = Release|Any CPU
+		{54F70009-AADC-46F6-A6FE-A6A07A84F6FB}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{54F70009-AADC-46F6-A6FE-A6A07A84F6FB}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{54F70009-AADC-46F6-A6FE-A6A07A84F6FB}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{54F70009-AADC-46F6-A6FE-A6A07A84F6FB}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
-		SolutionGuid = {ED71256A-5077-4D2E-AA88-15607C691AE1}
+		SolutionGuid = {3FEB8C92-8012-48B3-A92B-05D9B04694D0}
 	EndGlobalSection
 EndGlobal

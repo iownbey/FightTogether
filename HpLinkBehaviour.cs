@@ -1,9 +1,9 @@
 ﻿using HkmpPouch;
 using Modding;
-using ESoulLink.Events;
+using FightTogether.Events;
 using UnityEngine;
 
-namespace ESoulLink
+namespace FightTogether
 {
 
     public class HpLinkBehaviour : MonoBehaviour
@@ -20,7 +20,7 @@ namespace ESoulLink
         {
             //relay damage
             var pipeEvent = new ModifyPoolHealthEvent { BossName = Name, ReduceHealthBy = hpreduction };
-            ESoulLink.pipeClient.SendToServer(pipeEvent);
+            FightTogether.pipeClient.SendToServer(pipeEvent);
         }
         void LeavePool()
         {
@@ -31,7 +31,7 @@ namespace ESoulLink
                 lastHp = originalHp;
             }
             poolJoined = false;
-            ESoulLink.pipeClient.SendToServer(new LeavePoolEvent { BossName = Name });
+            FightTogether.pipeClient.SendToServer(new LeavePoolEvent { BossName = Name });
 
             // also remove any listeners
             //ESoulLink.pipeClient.OnRecieve -= PipeClient_OnRecieve;
@@ -52,11 +52,12 @@ namespace ESoulLink
                 return;
             }
             //join pool
-            ESoulLink.pipeClient.SendToServer(new JoinPoolEvent { BossName = Name, WithHealth = hm.hp });
+            FightTogether.pipeClient.SendToServer(new JoinPoolEvent { BossName = Name, WithHealth = hm.hp });
 
             poolJoined = true;
             //SharedHealthManager.pipeClient.OnRecieve += PipeClient_OnRecieve;
-            OnPoolUpdateEvent = ESoulLink.pipeClient.On(PoolUpdateEventFactory.Instance).Do<PoolUpdateEvent>((pipeEvent) => {
+            OnPoolUpdateEvent = FightTogether.pipeClient.On(PoolUpdateEventFactory.Instance).Do<PoolUpdateEvent>((pipeEvent) =>
+            {
                 if (pipeEvent.BossName != Name) { return; }
                 UpdateHealth(pipeEvent.CurrentHealth);
             });
@@ -64,22 +65,23 @@ namespace ESoulLink
         void FindName()
         {
             Name = gameObject.scene.name + gameObject.name;
-            if (!ESoulLink.healthManagerNames.Contains(Name)) { 
+            if (!FightTogether.healthManagerNames.Contains(Name))
+            {
 
-                ESoulLink.healthManagerNames.Add(Name);
+                FightTogether.healthManagerNames.Add(Name);
                 return;
             }
-            for (var i=0; i < 100; i++)
+            for (var i = 0; i < 100; i++)
             {
                 Name = $"{gameObject.scene.name}{gameObject.name} ({i})";
-                if (!ESoulLink.healthManagerNames.Contains(Name))
+                if (!FightTogether.healthManagerNames.Contains(Name))
                 {
-                    ESoulLink.healthManagerNames.Add(Name);
+                    FightTogether.healthManagerNames.Add(Name);
                     return;
                 }
 
             }
-            ESoulLink.Instance.Log($"Cannot find unique name for {Name} after 100 tries, bug game has bugs!");
+            FightTogether.Instance.Log($"Cannot find unique name for {Name} after 100 tries, bug game has bugs!");
         }
         void Awake()
         {
@@ -91,17 +93,17 @@ namespace ESoulLink
             {
                 return;
             }
-            ESoulLink.pipeClient.ClientApi.ClientManager.ConnectEvent += ClientManager_ConnectEvent; ;
-            ESoulLink.pipeClient.ClientApi.ClientManager.DisconnectEvent += ClientManager_DisconnectEvent;
+            FightTogether.pipeClient.ClientApi.ClientManager.ConnectEvent += ClientManager_ConnectEvent; ;
+            FightTogether.pipeClient.ClientApi.ClientManager.DisconnectEvent += ClientManager_DisconnectEvent;
             JoinPool();
-            if(hm.hp > 90)
+            if (hm.hp > 90)
             {
-                ESoulLink.pipeClient.ClientApi.UiManager.ChatBox.AddMessage($"An ill fated one Appears {gameObject.name}!");
+                FightTogether.pipeClient.ClientApi.UiManager.ChatBox.AddMessage($"An ill fated one Appears {gameObject.name}!");
             }
         }
         private void Log(string str)
         {
-            ESoulLink.Instance.Log(str);
+            FightTogether.Instance.Log(str);
         }
         private void ClientManager_ConnectEvent()
         {
@@ -137,7 +139,7 @@ namespace ESoulLink
                 };
                 if (hI.Source == null)
                 {
-                    ESoulLink.Instance.Log("Source is null, using Hero");
+                    FightTogether.Instance.Log("Source is null, using Hero");
                     hI.Source = HeroController.instance.gameObject;
                 }
 
@@ -149,8 +151,9 @@ namespace ESoulLink
                 if (hm != null)
                 {
                     ReflectionHelper.CallMethod<HealthManager>(hm, "TakeDamage", hI);
-                    if(originalHp > 90) { 
-                        ESoulLink.pipeClient.ClientApi.UiManager.ChatBox.AddMessage($"The waves were felt across the realms!");
+                    if (originalHp > 90)
+                    {
+                        FightTogether.pipeClient.ClientApi.UiManager.ChatBox.AddMessage($"The waves were felt across the realms!");
                     }
                 }
             }
@@ -167,8 +170,8 @@ namespace ESoulLink
         void OnDestroy()
         {
             LeavePool();
-            ESoulLink.pipeClient.ClientApi.ClientManager.ConnectEvent -= ClientManager_ConnectEvent; ;
-            ESoulLink.pipeClient.ClientApi.ClientManager.DisconnectEvent -= ClientManager_DisconnectEvent;
+            FightTogether.pipeClient.ClientApi.ClientManager.ConnectEvent -= ClientManager_ConnectEvent; ;
+            FightTogether.pipeClient.ClientApi.ClientManager.DisconnectEvent -= ClientManager_DisconnectEvent;
         }
 
         void FixedUpdate()

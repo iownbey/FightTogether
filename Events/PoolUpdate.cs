@@ -1,7 +1,7 @@
 ﻿using HkmpPouch;
 using System.Globalization;
 
-namespace ESoulLink.Events
+namespace FightTogether.Events
 {
     public class PoolUpdateEvent : PipeEvent
     {
