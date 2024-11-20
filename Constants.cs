@@ -4,5 +4,7 @@
     {
         public const string AddonName = "FightTogether";
         public const string AddonVersion = "0.0.1";
+
+        public const char DataSeparator = '|';
     }
 }

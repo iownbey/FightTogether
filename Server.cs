@@ -3,9 +3,26 @@ using HkmpPouch;
 using FightTogether.Events;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace FightTogether
 {
+    class EnemyData
+    {
+        // Amount of health that is considered the starting amount.
+        // Calculated based on the number of players
+        public int startingHealth;
+
+        // Amount of health each version of the monster has.
+        // Once these add up to equal starting Health, the monster dies.
+        public Dictionary<ushort, int> clientHealths = [];
+
+        public int GetCurrentHealth()
+        {
+            return Math.Max(0, (startingHealth * Server.playerCount) - clientHealths.Values.Select(a => startingHealth - a).Sum());
+        }
+    }
+
     internal class Server : ServerAddon
     {
         public override bool NeedsNetwork => false;
@@ -15,123 +32,72 @@ namespace FightTogether
         protected override string Version => Constants.AddonVersion;
 
         private PipeServer pipe;
-        private IServerApi myServerApi;
 
-        private readonly Dictionary<string, int> SceneEnemyHealthPool = [];
-        private readonly Dictionary<int, List<string>> PlayerToEnemyPools = [];
-        private readonly Dictionary<string, int> PlayerContributionToPool = [];
+        private readonly Dictionary<string, EnemyData> enemyData = [];
 
-        private readonly char[] separator = ['|'];
-
-        private string[] SplitData(PipeEvent e)
-        {
-            return e.EventData.Split(separator);
-        }
+        internal static int playerCount;
 
         public override void Initialize(IServerApi serverApi)
         {
-            pipe = new PipeServer(this.Name);
-            myServerApi = serverApi;
-            myServerApi.ServerManager.PlayerConnectEvent += ServerManager_PlayerConnectEvent;
-            myServerApi.ServerManager.PlayerDisconnectEvent += ServerManager_PlayerDisconnectEvent;
+            pipe = new PipeServer(Name);
+            ServerApi.ServerManager.PlayerConnectEvent += ServerManager_PlayerConnectEvent;
+            ServerApi.ServerManager.PlayerDisconnectEvent += ServerManager_PlayerDisconnectEvent;
 
-            pipe.On(JoinPoolEventFactory.Instance).Do<JoinPoolEvent>((pipeEvent) =>
+            pipe.On(UpdateHealthEventFactory.Instance).Do<HealthEvent>((pipeEvent) =>
             {
-                JoinPool(pipeEvent.FromPlayer, pipeEvent.BossName, pipeEvent.WithHealth);
-            });
-            pipe.On(ModifyPoolHealthEventFactory.Instance).Do<ModifyPoolHealthEvent>((pipeEvent) =>
-            {
-                ModifyPool(pipeEvent.BossName, pipeEvent.ReduceHealthBy);
-            });
-            pipe.On(LeavePoolEventFactory.Instance).Do<LeavePoolEvent>((pipeEvent) =>
-            {
-                LeavePool(pipeEvent.FromPlayer, pipeEvent.EventData);
-            });
-        }
-        private void LeaveAllPools(int playerId)
-        {
-            if (PlayerToEnemyPools.TryGetValue(playerId, out var value2))
-            {
-                foreach (var v in value2)
+                switch (pipeEvent.operation)
                 {
-                    if (PlayerContributionToPool.TryGetValue(v, out var poolContribution))
-                    {
-                        SceneEnemyHealthPool[v] -= poolContribution;
-                        if (SceneEnemyHealthPool[v] <= 0)
-                        {
-                            SceneEnemyHealthPool[v] = 0;
-                        }
-                        pipe.Broadcast(new PoolUpdateEvent { BossName = v, CurrentHealth = SceneEnemyHealthPool[v] });
-                    }
+                    case HealthOperation.Init: InitHealth(pipeEvent.FromPlayer, pipeEvent.entityName, pipeEvent.health); break;
+                    case HealthOperation.Update: UpdateHealth(pipeEvent.FromPlayer, pipeEvent.entityName, pipeEvent.health); break;
                 }
-                value2.Clear();
-            }
+
+            });
         }
-        private void LeavePool(int playerId, string PoolName)
+
+        void InitHealth(ushort playerId, string entityName, int health)
         {
-            if (PlayerContributionToPool.TryGetValue(PoolName + playerId, out var value))
+            if (!enemyData.ContainsKey(entityName))
             {
-                SceneEnemyHealthPool[PoolName] -= value;
-                if (SceneEnemyHealthPool[PoolName] <= 0)
+                enemyData[entityName] = new()
                 {
-                    SceneEnemyHealthPool[PoolName] = 0;
-                }
-                pipe.Broadcast(new PoolUpdateEvent { BossName = PoolName, CurrentHealth = SceneEnemyHealthPool[PoolName] });
+                    startingHealth = health
+                };
 
-            }
-            if (PlayerToEnemyPools.TryGetValue(playerId, out var value2))
-            {
-                value2.Remove(PoolName);
+                EnemyData enemy = enemyData[entityName];
+                enemy.clientHealths[playerId] = health;
+
+                pipe.Broadcast(new HealthEvent(HealthOperation.Update, entityName, enemy.GetCurrentHealth()));
             }
         }
 
-        private void JoinPool(int playerId, string enemyName, int hp)
+        void UpdateHealth(ushort playerId, string entityName, int health)
         {
-            if (!SceneEnemyHealthPool.TryGetValue(enemyName, out var value))
-            {
-                SceneEnemyHealthPool[enemyName] = 0;
-            }
-            if (!PlayerToEnemyPools.TryGetValue(playerId, out var value2))
-            {
-                PlayerToEnemyPools[playerId] = new List<string>();
-            }
-            if (!PlayerToEnemyPools[playerId].Contains(enemyName))
-            {
-                PlayerToEnemyPools[playerId].Add(enemyName);
-            }
-            PlayerContributionToPool[enemyName + playerId.ToString()] = hp;
-            SceneEnemyHealthPool[enemyName] += hp;
-            if (SceneEnemyHealthPool[enemyName] <= 0)
-            {
-                SceneEnemyHealthPool[enemyName] = 0;
-            }
-            pipe.Broadcast(new PoolUpdateEvent { BossName = enemyName, CurrentHealth = SceneEnemyHealthPool[enemyName] });
+            ServerApi.ServerManager.BroadcastMessage($"from {playerId}: {entityName} has {health} hp");
+
+            EnemyData enemy = enemyData[entityName];
+            enemy.clientHealths[playerId] = health;
+
+            pipe.Broadcast(new HealthEvent(HealthOperation.Update, entityName, enemy.GetCurrentHealth()));
         }
 
-        private void ModifyPool(string enemyName, int damage)
+        void ServerManager_PlayerDisconnectEvent(IServerPlayer player)
         {
-
-            if (!SceneEnemyHealthPool.TryGetValue(enemyName, out var value))
+            playerCount--;
+            foreach (KeyValuePair<string, EnemyData> kvp in enemyData)
             {
-                SceneEnemyHealthPool[enemyName] = 0;
+                kvp.Value.clientHealths.Remove(player.Id);
+                pipe.Broadcast(new HealthEvent(HealthOperation.Update, kvp.Key, kvp.Value.GetCurrentHealth()));
             }
-            SceneEnemyHealthPool[enemyName] -= damage;
-            if (SceneEnemyHealthPool[enemyName] <= 0)
-            {
-                SceneEnemyHealthPool[enemyName] = 0;
-            }
-            pipe.Broadcast(new PoolUpdateEvent { BossName = enemyName, CurrentHealth = SceneEnemyHealthPool[enemyName] });
         }
 
-        private void ServerManager_PlayerDisconnectEvent(IServerPlayer player)
+        void ServerManager_PlayerConnectEvent(IServerPlayer obj)
         {
-            LeaveAllPools(player.Id);
-        }
-
-
-        private void ServerManager_PlayerConnectEvent(IServerPlayer obj)
-        {
-            myServerApi.ServerManager.BroadcastMessage($"Another realm is brought into the tangle, {obj.Username} commits to the linking of fates");
+            playerCount++;
+            ServerApi.ServerManager.BroadcastMessage($"{obj.Username} wants to fight together");
+            foreach (KeyValuePair<string, EnemyData> kvp in enemyData)
+            {
+                pipe.Broadcast(new HealthEvent(HealthOperation.Update, kvp.Key, kvp.Value.GetCurrentHealth()));
+            }
         }
     }
 }
